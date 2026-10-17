@@ -6,9 +6,9 @@ authors = [
     {name = "Johann Tiderko",email = "johann@tiderko.de"}
 ]
 readme = "README.md"
-requires-python = ">=3.11,<3.12"
+requires-python = ">=3.12,<3.13"
 dependencies = [
-    "esphome>=2024.12.0"
+    "esphome>=2026.9.1"
 ]
 
 [tool.poetry]

@@ -13,6 +13,9 @@ esp32:
   cpu_frequency: 240MHz
   framework:
     type: esp-idf
+    advanced:
+      minimum_chip_revision: "3.1"
+      sram1_as_iram: true
   variant: ESP32
 
 # Enable Home Assistant API

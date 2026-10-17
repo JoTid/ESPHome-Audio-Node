@@ -22,6 +22,8 @@ Versorge das DAC-Modul entsprechend den Angaben des verwendeten Moduls. Verbinde
 - FLAC für die Home-Assistant-Announcement-Pipeline
 - `logger` ist auf `WARN` gesetzt
 - CPU-Takt ist auf 240 MHz gesetzt
+- Mindest-Chiprevision ist 3.1 (ESP32-D0WD-V3)
+- SRAM1 wird als IRAM verwendet (`sram1_as_iram`)
 - Media-Player-Puffer ist auf 100 kB begrenzt, um RAM zu sparen
 
 FLAC ist für diese Konfiguration eine geeignete Wahl: ESPHome benötigt dafür vergleichsweise wenig CPU. OPUS wäre keine passende Alternative bei 16 kHz, da der Codec eine Sample-Rate von 48 kHz voraussetzt.
@@ -30,8 +32,9 @@ Falls dein ESP32 bei 240 MHz instabil läuft oder neu startet, ändere `cpu_freq
 
 ## Voraussetzungen
 
-- Python 3.11
+- Python 3.12
 - [Poetry](https://python-poetry.org/docs/#installing-with-the-official-installer)
+- ESPHome 2026.9.1 oder neuer (wird durch Poetry installiert)
 - Ein ESP32-Board, das mit `esp32dev` kompatibel ist
 - Home Assistant mit ESPHome-Integration
 
@@ -54,10 +57,12 @@ esphome_audio_node_subnet: "255.255.255.0"
 
 Wähle eine freie statische IP-Adresse aus deinem Netzwerk. Passe Gateway und Subnetz bei Bedarf an. Die Datei `secrets.yaml` enthält private Zugangsdaten und sollte nicht eingecheckt oder veröffentlicht werden.
 
+Das OTA-Passwort bleibt zunächst für das Update vorhandener Firmware erhalten. ESPHome 2026.9.1 kann zusätzlich verschlüsseltes OTA anbieten. Nach dem ersten Update muss das Gerät im Log `Encryption: offered, plaintext accepted` melden; erst dann sollte das OTA-Passwort in einem zweiten Update durch `encryption: {}` ersetzt werden. Dabei wird derselbe Schlüssel wie für die Native API verwendet.
+
 ## Installieren und bauen
 
 ```powershell
-poetry env use 3.11
+poetry env use 3.12
 poetry install
 poetry run esphome config esphome-audio-node.yaml
 poetry run esphome compile esphome-audio-node.yaml
