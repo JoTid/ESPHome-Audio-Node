@@ -89,6 +89,24 @@ speaker:
     sample_rate: 16000
     bits_per_sample: 16bit
 
+microphone:
+  - platform: i2s_audio
+    id: ics43434_mic
+    i2s_audio_id: i2s_out
+    i2s_din_pin: GPIO33    # SD / DOUT des ICS-43434
+    adc_type: external
+    channel: left
+    sample_rate: 16000
+    bits_per_sample: 32bit
+
+binary_sensor:
+  - platform: gpio
+    name: "Bewegungsmelder"
+    device_class: motion
+    pin:
+      number: GPIO27
+      mode: INPUT
+
 media_player:
   - platform: speaker
     id: my_speaker
@@ -99,5 +117,13 @@ media_player:
       num_channels: 1
     name: "ESP32 Audio Player"
     buffer_size: 100000
+
+voice_assistant:
+  microphone:
+    microphone: ics43434_mic
+    channels:
+      - 0
+  speaker: my_speaker_component
+  use_wake_word: true
 
 captive_portal:

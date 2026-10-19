@@ -6,20 +6,26 @@ ESPHome-Audioplayer auf einem ESP32 mit einem externen PCM5102A-I2S-DAC und Anbi
 
 Die Pins beziehen sich auf die Konfiguration in [`esphome-audio-node.yaml`](./esphome-audio-node.yaml):
 
-| ESP32 | PCM5102A |
+| ESP32 | PCM5102A / ICS-43434 |
 | --- | --- |
-| GPIO 25 | LRCK / LCK / WS |
-| GPIO 26 | BCLK / BCK |
-| GPIO 22 | DIN |
-| GND | GND |
+| GPIO 25 | PCM5102A LRCK / LCK / WS; ICS-43434 WS |
+| GPIO 26 | PCM5102A BCLK / BCK; ICS-43434 SCK |
+| GPIO 22 | PCM5102A DIN |
+| GPIO 33 | ICS-43434 SD / DOUT |
+| GPIO 27 | Ausgang des Bewegungsmelders |
+| GND | GND beider Module |
 
-Versorge das DAC-Modul entsprechend den Angaben des verwendeten Moduls. Verbinde außerdem den Audioausgang des DAC mit einem geeigneten Verstärker oder Aktivlautsprecher.
+Verbinde den L/R-Pin des ICS-43434 mit GND, damit das Mikrofon den linken I²S-Kanal ausgibt. Versorge beide Module entsprechend deren Angaben. Verbinde den Audioausgang des DAC mit einem geeigneten Verstärker oder Aktivlautsprecher.
+
+Der AM312 wird mit seinem digitalen Ausgang an GPIO 27 angeschlossen. Die Konfiguration erwartet HIGH bei erkannter Bewegung und verwendet keinen internen Pull-up oder Pull-down, damit der Eingang den Sensorausgang nicht unnötig belastet. Sensor und ESP32 müssen eine gemeinsame Masse (GND) haben. Achte darauf, dass am ESP32-Eingang höchstens 3,3 V anliegen; verbinde keinen 5-V-Ausgang direkt mit GPIO 27. In Home Assistant erscheint der Eingang als Binärsensor mit der Geräteklasse „Bewegung“ und kann in Automationen verwendet werden.
 
 ## Audio-Konfiguration
 
 - I2S-Ausgabe über `speaker.i2s_audio` mit externem DAC
 - Mono, 16 kHz und 16 Bit
 - FLAC für die Home-Assistant-Announcement-Pipeline
+- ICS-43434 als I²S-Mikrofon, 16 kHz, linker Kanal
+- Home Assistant Voice Assistant mit Wake-Word-Unterstützung
 - `logger` ist auf `WARN` gesetzt
 - CPU-Takt ist auf 240 MHz gesetzt
 - Mindest-Chiprevision ist 3.1 (ESP32-D0WD-V3)
