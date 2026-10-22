@@ -10,7 +10,6 @@ logger:
   baud_rate: 0
   logs:
     "*": WARN
-    vfs_fat_sdmmc: DEBUG
 
 esp32:
   board: esp32-s3-devkitc-1
@@ -19,29 +18,22 @@ esp32:
   cpu_frequency: 240MHz
   framework:
     type: esp-idf
-    sdkconfig_options:
-      # exFAT-Unterstützung aktivieren (benötigt für 128-GB-Karten)
-      CONFIG_FATFS_FS_EXFAT: "y"
-    advanced:
-      disable_fatfs: false
-      disable_vfs_support_dir: false
-      include_builtin_idf_components:
-        - fatfs
-        - sdmmc
-        - esp_driver_sdmmc
 
 psram:
   mode: octal
-
-external_components:
-  - source:
-      type: local
-      path: components
 
 # Enable Home Assistant API
 api:
   encryption:
     key: !secret esphome_audio_node_ha_api_key
+
+# MQTT für schnelle State-Updates (reduziert Trigger-Verzögerung vs. native API)
+mqtt:
+  broker: !secret mqtt_broker
+  username: !secret mqtt_username
+  password: !secret mqtt_password
+  # Nur State-Updates via MQTT; Steuerung weiterhin über native API
+  discovery: false
 
 ota:
   - platform: esphome
@@ -122,10 +114,6 @@ microphone:
     sample_rate: 16000
     bits_per_sample: 32bit
 
-sd_wav_player:
-  id: local_sd_audio
-  speaker_id: my_speaker_component
-
 binary_sensor:
   - platform: gpio
     name: "Bewegungsmelder"
@@ -133,9 +121,6 @@ binary_sensor:
     pin:
       number: GPIO43
       mode: INPUT
-    on_press:
-      then:
-        - lambda: id(local_sd_audio).play_random();
 
 media_player:
   - platform: speaker
@@ -146,7 +131,7 @@ media_player:
       sample_rate: 16000
       num_channels: 1
     name: "ESP32 Audio Player"
-    buffer_size: 8192
+    buffer_size: 16000
 
 voice_assistant:
   microphone:
