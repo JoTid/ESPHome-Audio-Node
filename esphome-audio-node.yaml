@@ -115,7 +115,71 @@ globals:
   - id: led_count
     type: uint8_t
     restore_value: no
-    initial_value: '6'
+    initial_value: '50'
+  - id: led2_blink_on
+    type: bool
+    restore_value: no
+    initial_value: 'true'
+  - id: led2_blink_last_change
+    type: uint32_t
+    restore_value: no
+    initial_value: '0'
+  - id: led2_blink_on_ms
+    type: uint32_t
+    restore_value: no
+    initial_value: '50'
+  - id: led2_blink_off_ms
+    type: uint32_t
+    restore_value: no
+    initial_value: '20'
+  - id: led2_blink_red
+    type: uint8_t
+    restore_value: no
+    initial_value: '255'
+  - id: led2_blink_green
+    type: uint8_t
+    restore_value: no
+    initial_value: '0'
+  - id: led2_blink_blue
+    type: uint8_t
+    restore_value: no
+    initial_value: '0'
+  - id: led2_count
+    type: uint8_t
+    restore_value: no
+    initial_value: '50'
+  - id: led3_blink_on
+    type: bool
+    restore_value: no
+    initial_value: 'true'
+  - id: led3_blink_last_change
+    type: uint32_t
+    restore_value: no
+    initial_value: '0'
+  - id: led3_blink_on_ms
+    type: uint32_t
+    restore_value: no
+    initial_value: '50'
+  - id: led3_blink_off_ms
+    type: uint32_t
+    restore_value: no
+    initial_value: '20'
+  - id: led3_blink_red
+    type: uint8_t
+    restore_value: no
+    initial_value: '255'
+  - id: led3_blink_green
+    type: uint8_t
+    restore_value: no
+    initial_value: '0'
+  - id: led3_blink_blue
+    type: uint8_t
+    restore_value: no
+    initial_value: '0'
+  - id: led3_count
+    type: uint8_t
+    restore_value: no
+    initial_value: '50'
 
 # I2S Audio Bus Definition (nur die Clocks)
 i2s_audio:
@@ -177,6 +241,68 @@ light:
             for (int i = 0; i < it.size(); i++) {
               it[i] = i < id(led_count) ? color : Color(0, 0, 0);
             }
+  - platform: esp32_rmt_led_strip
+    id: movement_leds_2
+    name: "Bewegungs-LEDs 2"
+    pin: GPIO9
+    num_leds: 50
+    chipset: WS2812
+    channel_colors: GRB
+    effects:
+      - addressable_lambda:
+          name: "Blinken"
+          update_interval: 10ms
+          lambda: |-
+            const uint32_t now = millis();
+            const uint32_t phase_duration = id(led2_blink_on)
+              ? id(led2_blink_on_ms)
+              : id(led2_blink_off_ms);
+
+            if (initial_run) {
+              id(led2_blink_on) = true;
+              id(led2_blink_last_change) = now;
+            } else if (now - id(led2_blink_last_change) >= phase_duration) {
+              id(led2_blink_on) = !id(led2_blink_on);
+              id(led2_blink_last_change) = now;
+            }
+
+            const Color color = id(led2_blink_on)
+              ? Color(id(led2_blink_red), id(led2_blink_green), id(led2_blink_blue))
+              : Color(0, 0, 0);
+            for (int i = 0; i < it.size(); i++) {
+              it[i] = i < id(led2_count) ? color : Color(0, 0, 0);
+            }
+  - platform: esp32_rmt_led_strip
+    id: movement_leds_3
+    name: "Bewegungs-LEDs 3"
+    pin: GPIO10
+    num_leds: 50
+    chipset: WS2812
+    channel_colors: GRB
+    effects:
+      - addressable_lambda:
+          name: "Blinken"
+          update_interval: 10ms
+          lambda: |-
+            const uint32_t now = millis();
+            const uint32_t phase_duration = id(led3_blink_on)
+              ? id(led3_blink_on_ms)
+              : id(led3_blink_off_ms);
+
+            if (initial_run) {
+              id(led3_blink_on) = true;
+              id(led3_blink_last_change) = now;
+            } else if (now - id(led3_blink_last_change) >= phase_duration) {
+              id(led3_blink_on) = !id(led3_blink_on);
+              id(led3_blink_last_change) = now;
+            }
+
+            const Color color = id(led3_blink_on)
+              ? Color(id(led3_blink_red), id(led3_blink_green), id(led3_blink_blue))
+              : Color(0, 0, 0);
+            for (int i = 0; i < it.size(); i++) {
+              it[i] = i < id(led3_count) ? color : Color(0, 0, 0);
+            }
 
 select:
   - platform: template
@@ -212,6 +338,74 @@ select:
             id(led_blink_red) = 180; id(led_blink_green) = 0; id(led_blink_blue) = 255;
           } else if (x == "Weiß") {
             id(led_blink_red) = 255; id(led_blink_green) = 255; id(led_blink_blue) = 255;
+          }
+  - platform: template
+    id: halloween_led_2_color
+    name: "Halloween-LED 2 Blink-Farbe"
+    optimistic: true
+    restore_value: false
+    initial_option: "Rot"
+    options:
+      - "Rot"
+      - "Orange"
+      - "Gelb"
+      - "Grün"
+      - "Türkis"
+      - "Blau"
+      - "Violett"
+      - "Weiß"
+    on_value:
+      - lambda: |-
+          if (x == "Rot") {
+            id(led2_blink_red) = 255; id(led2_blink_green) = 0; id(led2_blink_blue) = 0;
+          } else if (x == "Orange") {
+            id(led2_blink_red) = 255; id(led2_blink_green) = 80; id(led2_blink_blue) = 0;
+          } else if (x == "Gelb") {
+            id(led2_blink_red) = 255; id(led2_blink_green) = 255; id(led2_blink_blue) = 0;
+          } else if (x == "Grün") {
+            id(led2_blink_red) = 0; id(led2_blink_green) = 255; id(led2_blink_blue) = 0;
+          } else if (x == "Türkis") {
+            id(led2_blink_red) = 0; id(led2_blink_green) = 255; id(led2_blink_blue) = 255;
+          } else if (x == "Blau") {
+            id(led2_blink_red) = 0; id(led2_blink_green) = 0; id(led2_blink_blue) = 255;
+          } else if (x == "Violett") {
+            id(led2_blink_red) = 180; id(led2_blink_green) = 0; id(led2_blink_blue) = 255;
+          } else if (x == "Weiß") {
+            id(led2_blink_red) = 255; id(led2_blink_green) = 255; id(led2_blink_blue) = 255;
+          }
+  - platform: template
+    id: halloween_led_3_color
+    name: "Halloween-LED 3 Blink-Farbe"
+    optimistic: true
+    restore_value: false
+    initial_option: "Rot"
+    options:
+      - "Rot"
+      - "Orange"
+      - "Gelb"
+      - "Grün"
+      - "Türkis"
+      - "Blau"
+      - "Violett"
+      - "Weiß"
+    on_value:
+      - lambda: |-
+          if (x == "Rot") {
+            id(led3_blink_red) = 255; id(led3_blink_green) = 0; id(led3_blink_blue) = 0;
+          } else if (x == "Orange") {
+            id(led3_blink_red) = 255; id(led3_blink_green) = 80; id(led3_blink_blue) = 0;
+          } else if (x == "Gelb") {
+            id(led3_blink_red) = 255; id(led3_blink_green) = 255; id(led3_blink_blue) = 0;
+          } else if (x == "Grün") {
+            id(led3_blink_red) = 0; id(led3_blink_green) = 255; id(led3_blink_blue) = 0;
+          } else if (x == "Türkis") {
+            id(led3_blink_red) = 0; id(led3_blink_green) = 255; id(led3_blink_blue) = 255;
+          } else if (x == "Blau") {
+            id(led3_blink_red) = 0; id(led3_blink_green) = 0; id(led3_blink_blue) = 255;
+          } else if (x == "Violett") {
+            id(led3_blink_red) = 180; id(led3_blink_green) = 0; id(led3_blink_blue) = 255;
+          } else if (x == "Weiß") {
+            id(led3_blink_red) = 255; id(led3_blink_green) = 255; id(led3_blink_blue) = 255;
           }
 
 number:
@@ -249,6 +443,74 @@ number:
     initial_value: 50
     set_action:
       - lambda: id(led_count) = static_cast<uint8_t>(x);
+  - platform: template
+    id: halloween_led_2_on_time
+    name: "Halloween-LED 2 Blink-AN-Zeit"
+    unit_of_measurement: "ms"
+    min_value: 20
+    max_value: 5000
+    step: 10
+    optimistic: true
+    initial_value: 50
+    set_action:
+      - lambda: id(led2_blink_on_ms) = static_cast<uint32_t>(x);
+  - platform: template
+    id: halloween_led_2_off_time
+    name: "Halloween-LED 2 Blink-AUS-Zeit"
+    unit_of_measurement: "ms"
+    min_value: 20
+    max_value: 5000
+    step: 10
+    optimistic: true
+    initial_value: 20
+    set_action:
+      - lambda: id(led2_blink_off_ms) = static_cast<uint32_t>(x);
+  - platform: template
+    id: halloween_led_2_count
+    name: "Halloween-LED 2 Anzahl"
+    unit_of_measurement: "LEDs"
+    mode: box
+    min_value: 1
+    max_value: 50
+    step: 1
+    optimistic: true
+    initial_value: 50
+    set_action:
+      - lambda: id(led2_count) = static_cast<uint8_t>(x);
+  - platform: template
+    id: halloween_led_3_on_time
+    name: "Halloween-LED 3 Blink-AN-Zeit"
+    unit_of_measurement: "ms"
+    min_value: 20
+    max_value: 5000
+    step: 10
+    optimistic: true
+    initial_value: 50
+    set_action:
+      - lambda: id(led3_blink_on_ms) = static_cast<uint32_t>(x);
+  - platform: template
+    id: halloween_led_3_off_time
+    name: "Halloween-LED 3 Blink-AUS-Zeit"
+    unit_of_measurement: "ms"
+    min_value: 20
+    max_value: 5000
+    step: 10
+    optimistic: true
+    initial_value: 20
+    set_action:
+      - lambda: id(led3_blink_off_ms) = static_cast<uint32_t>(x);
+  - platform: template
+    id: halloween_led_3_count
+    name: "Halloween-LED 3 Anzahl"
+    unit_of_measurement: "LEDs"
+    mode: box
+    min_value: 1
+    max_value: 50
+    step: 1
+    optimistic: true
+    initial_value: 50
+    set_action:
+      - lambda: id(led3_count) = static_cast<uint8_t>(x);
 
 switch:
   - platform: template
@@ -274,6 +536,36 @@ switch:
               - light.turn_on:
                   id: movement_leds
                   effect: "Blinken"
+  - platform: template
+    id: halloween_led_2_enabled
+    name: "Halloween-LED 2"
+    optimistic: true
+    restore_mode: RESTORE_DEFAULT_ON
+    turn_off_action:
+      - light.turn_off: movement_leds_2
+    turn_on_action:
+      - if:
+          condition:
+            lambda: return id(audio_playing);
+          then:
+            - light.turn_on:
+                id: movement_leds_2
+                effect: "Blinken"
+  - platform: template
+    id: halloween_led_3_enabled
+    name: "Halloween-LED 3"
+    optimistic: true
+    restore_mode: RESTORE_DEFAULT_ON
+    turn_off_action:
+      - light.turn_off: movement_leds_3
+    turn_on_action:
+      - if:
+          condition:
+            lambda: return id(audio_playing);
+          then:
+            - light.turn_on:
+                id: movement_leds_3
+                effect: "Blinken"
 
 binary_sensor:
   - platform: gpio
@@ -288,7 +580,7 @@ binary_sensor:
             condition:
               switch.is_on: halloween_music_enabled
             then:
-              - lambda: id(random_sound_index) = random_uint32() % 10;
+              - lambda: id(random_sound_index) = random_uint32() % 12;
               - if:
                   condition:
                     lambda: return id(random_sound_index) == 0;
@@ -359,6 +651,20 @@ binary_sensor:
                     - media_player.speaker.play_on_device_media_file:
                         media_file: files_10
                         announcement: true
+              - if:
+                  condition:
+                    lambda: return id(random_sound_index) == 10;
+                  then:
+                    - media_player.speaker.play_on_device_media_file:
+                        media_file: files_11
+                        announcement: true
+              - if:
+                  condition:
+                    lambda: return id(random_sound_index) == 11;
+                  then:
+                    - media_player.speaker.play_on_device_media_file:
+                        media_file: files_12
+                        announcement: true
 
 media_player:
   - platform: speaker
@@ -379,6 +685,20 @@ media_player:
             - light.turn_on:
                 id: movement_leds
                 effect: "Blinken"
+      - if:
+          condition:
+            switch.is_on: halloween_led_2_enabled
+          then:
+            - light.turn_on:
+                id: movement_leds_2
+                effect: "Blinken"
+      - if:
+          condition:
+            switch.is_on: halloween_led_3_enabled
+          then:
+            - light.turn_on:
+                id: movement_leds_3
+                effect: "Blinken"
     on_announcement:
       - lambda: id(audio_playing) = true;
       - if:
@@ -388,12 +708,30 @@ media_player:
             - light.turn_on:
                 id: movement_leds
                 effect: "Blinken"
+      - if:
+          condition:
+            switch.is_on: halloween_led_2_enabled
+          then:
+            - light.turn_on:
+                id: movement_leds_2
+                effect: "Blinken"
+      - if:
+          condition:
+            switch.is_on: halloween_led_3_enabled
+          then:
+            - light.turn_on:
+                id: movement_leds_3
+                effect: "Blinken"
     on_pause:
       - lambda: id(audio_playing) = false;
       - light.turn_off: movement_leds
+      - light.turn_off: movement_leds_2
+      - light.turn_off: movement_leds_3
     on_idle:
       - lambda: id(audio_playing) = false;
       - light.turn_off: movement_leds
+      - light.turn_off: movement_leds_2
+      - light.turn_off: movement_leds_3
     files:
       - id: files_1
         file: "https://jotid-iot-home.duckdns.org:8123/local/halloween/witch-laugh.mp3"
@@ -415,7 +753,10 @@ media_player:
         file: "https://jotid-iot-home.duckdns.org:8123/local/halloween/halloween-music.mp3"
       - id: files_10
         file: "https://jotid-iot-home.duckdns.org:8123/local/halloween/funny-pumpkin.mp3"
-
+      - id: files_11
+        file: "https://jotid-iot-home.duckdns.org:8123/local/halloween/cinematic-1.mp3"
+      - id: files_12
+        file: "https://jotid-iot-home.duckdns.org:8123/local/halloween/frightened-horror-scream.mp3"        
 
 voice_assistant:
   microphone:
