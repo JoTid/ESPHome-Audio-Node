@@ -84,6 +84,38 @@ globals:
     type: bool
     restore_value: no
     initial_value: 'false'
+  - id: led_blink_on
+    type: bool
+    restore_value: no
+    initial_value: 'true'
+  - id: led_blink_last_change
+    type: uint32_t
+    restore_value: no
+    initial_value: '0'
+  - id: led_blink_on_ms
+    type: uint32_t
+    restore_value: no
+    initial_value: '50'
+  - id: led_blink_off_ms
+    type: uint32_t
+    restore_value: no
+    initial_value: '20'
+  - id: led_blink_red
+    type: uint8_t
+    restore_value: no
+    initial_value: '255'
+  - id: led_blink_green
+    type: uint8_t
+    restore_value: no
+    initial_value: '0'
+  - id: led_blink_blue
+    type: uint8_t
+    restore_value: no
+    initial_value: '0'
+  - id: led_count
+    type: uint8_t
+    restore_value: no
+    initial_value: '6'
 
 # I2S Audio Bus Definition (nur die Clocks)
 i2s_audio:
@@ -118,20 +150,105 @@ light:
     id: movement_leds
     name: "Bewegungs-LEDs"
     pin: GPIO8
-    num_leds: 6
+    num_leds: 50
     chipset: WS2812
     channel_colors: GRB
     effects:
-      - strobe:
-          name: "Rot blinken"
-          colors:
-            - state: true
-              red: 100%
-              green: 0%
-              blue: 0%
-              duration: 50ms
-            - state: false
-              duration: 20ms
+      - addressable_lambda:
+          name: "Blinken"
+          update_interval: 10ms
+          lambda: |-
+            const uint32_t now = millis();
+            const uint32_t phase_duration = id(led_blink_on)
+              ? id(led_blink_on_ms)
+              : id(led_blink_off_ms);
+
+            if (initial_run) {
+              id(led_blink_on) = true;
+              id(led_blink_last_change) = now;
+            } else if (now - id(led_blink_last_change) >= phase_duration) {
+              id(led_blink_on) = !id(led_blink_on);
+              id(led_blink_last_change) = now;
+            }
+
+            const Color color = id(led_blink_on)
+              ? Color(id(led_blink_red), id(led_blink_green), id(led_blink_blue))
+              : Color(0, 0, 0);
+            for (int i = 0; i < it.size(); i++) {
+              it[i] = i < id(led_count) ? color : Color(0, 0, 0);
+            }
+
+select:
+  - platform: template
+    id: halloween_led_color
+    name: "Halloween-LED Blink-Farbe"
+    optimistic: true
+    restore_value: false
+    initial_option: "Rot"
+    options:
+      - "Rot"
+      - "Orange"
+      - "Gelb"
+      - "Grün"
+      - "Türkis"
+      - "Blau"
+      - "Violett"
+      - "Weiß"
+    on_value:
+      - lambda: |-
+          if (x == "Rot") {
+            id(led_blink_red) = 255; id(led_blink_green) = 0; id(led_blink_blue) = 0;
+          } else if (x == "Orange") {
+            id(led_blink_red) = 255; id(led_blink_green) = 80; id(led_blink_blue) = 0;
+          } else if (x == "Gelb") {
+            id(led_blink_red) = 255; id(led_blink_green) = 255; id(led_blink_blue) = 0;
+          } else if (x == "Grün") {
+            id(led_blink_red) = 0; id(led_blink_green) = 255; id(led_blink_blue) = 0;
+          } else if (x == "Türkis") {
+            id(led_blink_red) = 0; id(led_blink_green) = 255; id(led_blink_blue) = 255;
+          } else if (x == "Blau") {
+            id(led_blink_red) = 0; id(led_blink_green) = 0; id(led_blink_blue) = 255;
+          } else if (x == "Violett") {
+            id(led_blink_red) = 180; id(led_blink_green) = 0; id(led_blink_blue) = 255;
+          } else if (x == "Weiß") {
+            id(led_blink_red) = 255; id(led_blink_green) = 255; id(led_blink_blue) = 255;
+          }
+
+number:
+  - platform: template
+    id: halloween_led_on_time
+    name: "Halloween-LED Blink-AN-Zeit"
+    unit_of_measurement: "ms"
+    min_value: 20
+    max_value: 5000
+    step: 10
+    optimistic: true
+    initial_value: 50
+    set_action:
+      - lambda: id(led_blink_on_ms) = static_cast<uint32_t>(x);
+  - platform: template
+    id: halloween_led_off_time
+    name: "Halloween-LED Blink-AUS-Zeit"
+    unit_of_measurement: "ms"
+    min_value: 20
+    max_value: 5000
+    step: 10
+    optimistic: true
+    initial_value: 20
+    set_action:
+      - lambda: id(led_blink_off_ms) = static_cast<uint32_t>(x);
+  - platform: template
+    id: halloween_led_count
+    name: "Halloween-LED Anzahl"
+    unit_of_measurement: "LEDs"
+    mode: box
+    min_value: 1
+    max_value: 50
+    step: 1
+    optimistic: true
+    initial_value: 50
+    set_action:
+      - lambda: id(led_count) = static_cast<uint8_t>(x);
 
 switch:
   - platform: template
@@ -156,7 +273,7 @@ switch:
             then:
               - light.turn_on:
                   id: movement_leds
-                  effect: "Rot blinken"
+                  effect: "Blinken"
 
 binary_sensor:
   - platform: gpio
@@ -261,7 +378,7 @@ media_player:
           then:
             - light.turn_on:
                 id: movement_leds
-                effect: "Rot blinken"
+                effect: "Blinken"
     on_announcement:
       - lambda: id(audio_playing) = true;
       - if:
@@ -270,7 +387,7 @@ media_player:
           then:
             - light.turn_on:
                 id: movement_leds
-                effect: "Rot blinken"
+                effect: "Blinken"
     on_pause:
       - lambda: id(audio_playing) = false;
       - light.turn_off: movement_leds
