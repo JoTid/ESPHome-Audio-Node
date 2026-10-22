@@ -25,7 +25,8 @@ api:
 
 ota:
   - platform: esphome
-    password: !secret esphome_audio_node_ota_password
+    encryption:
+      key: !secret esphome_audio_node_ha_api_key
 
 wifi:
   ssid: !secret wifi_ssid
@@ -39,6 +40,8 @@ wifi:
     gateway: !secret esphome_audio_node_gateway
     # The subnet of the network. 255.255.255.0 works for most home networks.
     subnet: !secret esphome_audio_node_subnet
+    dns1: !secret local_gateway
+    dns2: 8.8.8.8  # öffentlicher Fallback
 
   power_save_mode: none
 
@@ -112,7 +115,7 @@ media_player:
     id: my_speaker
     announcement_pipeline:
       speaker: my_speaker_component
-      format: FLAC
+      format: WAV
       sample_rate: 16000
       num_channels: 1
     name: "ESP32 Audio Player"
