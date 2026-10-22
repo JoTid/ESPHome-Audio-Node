@@ -10,9 +10,9 @@ Die Pins beziehen sich auf die Konfiguration in [`esphome-audio-node.yaml`](./es
 | --- | --- |
 | GPIO 25 | PCM5102A LRCK / LCK / WS; ICS-43434 WS |
 | GPIO 26 | PCM5102A BCLK / BCK; ICS-43434 SCK |
-| GPIO 22 | PCM5102A DIN |
+| GPIO 27 | PCM5102A DIN |
 | GPIO 33 | ICS-43434 SD / DOUT |
-| GPIO 27 | Ausgang des Bewegungsmelders |
+| GPIO 22 | Ausgang des Bewegungsmelders |
 | GND | GND beider Module |
 
 Verbinde den L/R-Pin des ICS-43434 mit GND, damit das Mikrofon den linken I²S-Kanal ausgibt. Versorge beide Module entsprechend deren Angaben. Verbinde den Audioausgang des DAC mit einem geeigneten Verstärker oder Aktivlautsprecher.

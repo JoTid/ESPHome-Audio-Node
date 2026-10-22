@@ -86,7 +86,7 @@ speaker:
     id: my_speaker_component
     dac_type: external
     i2s_audio_id: i2s_out
-    i2s_dout_pin: GPIO22    # DIN / Data In des PCM5102A
+    i2s_dout_pin: GPIO27    # DIN / Data In des PCM5102A
     i2s_mode: primary
     channel: mono
     sample_rate: 16000
@@ -107,7 +107,7 @@ binary_sensor:
     name: "Bewegungsmelder"
     device_class: motion
     pin:
-      number: GPIO27
+      number: GPIO22
       mode: INPUT
 
 media_player:
@@ -119,7 +119,7 @@ media_player:
       sample_rate: 16000
       num_channels: 1
     name: "ESP32 Audio Player"
-    buffer_size: 100000
+    buffer_size: 8192
 
 voice_assistant:
   microphone:
