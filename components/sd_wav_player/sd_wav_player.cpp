@@ -91,12 +91,13 @@ bool SDWavPlayer::mount_card_() {
   // Interne Pull-ups aktivieren (notwendig ohne externe Pull-up-Widerstände)
   slot.flags |= SDMMC_SLOT_FLAG_INTERNAL_PULLUP;
 
+  // esp_vfs_fat_sdmmc_mount unterstützt transparent FAT32 und exFAT,
+  // sofern CONFIG_FATFS_FS_EXFAT in der sdkconfig aktiviert ist.
   esp_vfs_fat_mount_config_t mount_config = VFS_FAT_MOUNT_DEFAULT_CONFIG();
   mount_config.format_if_mount_failed = false;
   mount_config.max_files = 4;
-  // allocation_unit_size ist kritisch für FAT32-Kompatibilität;
-  // 16 KB entspricht der typischen Windows-Cluster-Größe für 1 GB-Karten
-  mount_config.allocation_unit_size = 16 * 1024;
+  // 128 KB Cluster-Größe ist optimal für 128-GB-exFAT-Karten
+  mount_config.allocation_unit_size = 128 * 1024;
 
   sdmmc_card_t *card = nullptr;
   esp_err_t err = esp_vfs_fat_sdmmc_mount(MOUNT_POINT, &host, &slot, &mount_config, &card);
@@ -105,9 +106,9 @@ bool SDWavPlayer::mount_card_() {
     if (err == ESP_ERR_INVALID_STATE) {
       ESP_LOGE(TAG, "Hint: card may already be mounted or another driver is active");
     } else if (err == ESP_FAIL) {
-      ESP_LOGE(TAG, "Hint: FAT filesystem not recognized. Try reformatting the card "
-                    "as FAT32 without a partition table (using SD Formatter tool), "
-                    "or check pull-up resistors on CMD/D0 lines.");
+      ESP_LOGE(TAG, "Hint: filesystem not recognized. For exFAT cards, ensure "
+                    "CONFIG_FATFS_FS_EXFAT is enabled. Check pull-up resistors "
+                    "on CMD/D0 lines if the card is not detected at all.");
     }
     return false;
   }

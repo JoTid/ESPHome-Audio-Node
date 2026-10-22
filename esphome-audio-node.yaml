@@ -19,6 +19,9 @@ esp32:
   cpu_frequency: 240MHz
   framework:
     type: esp-idf
+    sdkconfig_options:
+      # exFAT-Unterstützung aktivieren (benötigt für 128-GB-Karten)
+      CONFIG_FATFS_FS_EXFAT: "y"
     advanced:
       disable_fatfs: false
       disable_vfs_support_dir: false
@@ -143,7 +146,7 @@ media_player:
       sample_rate: 16000
       num_channels: 1
     name: "ESP32 Audio Player"
-    buffer_size: 100000
+    buffer_size: 8192
 
 voice_assistant:
   microphone:
