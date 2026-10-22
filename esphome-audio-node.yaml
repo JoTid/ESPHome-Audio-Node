@@ -6,8 +6,11 @@ esphome:
     version: "1.1"
 
 logger:
-  level: WARN
+  level: DEBUG
   baud_rate: 0
+  logs:
+    "*": WARN
+    vfs_fat_sdmmc: DEBUG
 
 esp32:
   board: esp32-s3-devkitc-1
@@ -16,9 +19,21 @@ esp32:
   cpu_frequency: 240MHz
   framework:
     type: esp-idf
+    advanced:
+      disable_fatfs: false
+      disable_vfs_support_dir: false
+      include_builtin_idf_components:
+        - fatfs
+        - sdmmc
+        - esp_driver_sdmmc
 
 psram:
   mode: octal
+
+external_components:
+  - source:
+      type: local
+      path: components
 
 # Enable Home Assistant API
 api:
@@ -104,6 +119,10 @@ microphone:
     sample_rate: 16000
     bits_per_sample: 32bit
 
+sd_wav_player:
+  id: local_sd_audio
+  speaker_id: my_speaker_component
+
 binary_sensor:
   - platform: gpio
     name: "Bewegungsmelder"
@@ -111,6 +130,9 @@ binary_sensor:
     pin:
       number: GPIO43
       mode: INPUT
+    on_press:
+      then:
+        - lambda: id(local_sd_audio).play_random();
 
 media_player:
   - platform: speaker

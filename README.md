@@ -25,9 +25,13 @@ Das Board hat einen Onboard-microSD-Anschluss. Laut Pinout sind dessen Signale:
 | --- | --- |
 | GPIO 39 | SD_CLK |
 | GPIO 38 | SD_CMD |
-| GPIO 40 | SD_DATA |
+| GPIO 40 | SD_DATA / DAT0 |
 
-Die SD-Karte ist derzeit nicht in der ESPHome-Konfiguration eingebunden. Diese Zuordnung dokumentiert die Anschlüsse für eine mögliche spätere Implementierung der lokalen Audiowiedergabe.
+Die SD-Karte wird im 1-Bit-SDMMC-Modus eingebunden. Lege die WAV-Dateien direkt in das Stammverzeichnis der Karte. Bei jeder neuen Bewegung startet das Gerät zufällig eine passende Datei; die zuletzt abgespielte Datei wird nach Möglichkeit nicht direkt wiederholt. Die Karte muss FAT32-formatiert sein. ESPHome formatiert sie bei einem Fehler ausdrücklich nicht.
+
+Unterstützt werden PCM-WAV-Dateien mit 16 kHz, 16 Bit und einem Kanal (Mono). Andere Abtastraten, Bitbreiten oder komprimierte WAV-Dateien werden übersprungen. Die Wiedergabe wird direkt von der Karte zum I²S-Lautsprecher gestreamt, ohne die vollständige Datei in den RAM zu laden. Wenn die Karte nicht eingebunden werden kann oder keine passende Datei enthält, steht der Grund im ESPHome-Log.
+
+Die Bewegungsmeldung wird weiterhin an Home Assistant übertragen. Da die Wiedergabe nun lokal startet, deaktiviere eine vorhandene Home-Assistant-Automation, die bei derselben Bewegung zusätzlich Audio auf diesem Gerät startet, um doppelte oder überlagerte Wiedergabe zu vermeiden.
 
 Verbinde den L/R-Pin des ICS-43434 mit GND, damit das Mikrofon den linken I²S-Kanal ausgibt. Versorge beide Module entsprechend deren Angaben. Verbinde den Audioausgang des DAC mit einem geeigneten Verstärker oder Aktivlautsprecher.
 
@@ -40,6 +44,7 @@ Die serielle UART-Ausgabe des ESPHome-Loggers ist deaktiviert (`baud_rate: 0`), 
 - I2S-Ausgabe über `speaker.i2s_audio` mit externem DAC
 - Mono, 16 kHz und 16 Bit
 - WAV für die Home-Assistant-Announcement-Pipeline
+- Zufällige lokale PCM-WAV-Wiedergabe von der microSD bei Bewegung
 - ICS-43434 als I²S-Mikrofon, 16 kHz, linker Kanal
 - Home Assistant Voice Assistant mit Wake-Word-Unterstützung
 - `logger` ist auf `WARN` gesetzt
