@@ -7,6 +7,7 @@ esphome:
 
 logger:
   level: WARN
+  baud_rate: 0
 
 esp32:
   board: esp32dev
@@ -73,6 +74,10 @@ globals:
     type: int
     restore_value: no
     initial_value: '0'
+  - id: random_sound_index
+    type: int
+    restore_value: no
+    initial_value: '0'
 
 # I2S Audio Bus Definition (nur die Clocks)
 i2s_audio:
@@ -109,6 +114,79 @@ binary_sensor:
     pin:
       number: GPIO22
       mode: INPUT
+    on_press:
+      then:
+        - lambda: id(random_sound_index) = random_uint32() % 10;
+        - if:
+            condition:
+              lambda: return id(random_sound_index) == 0;
+            then:
+              - media_player.speaker.play_on_device_media_file:
+                  media_file: files_1
+                  announcement: true
+        - if:
+            condition:
+              lambda: return id(random_sound_index) == 1;
+            then:
+              - media_player.speaker.play_on_device_media_file:
+                  media_file: files_2
+                  announcement: true
+        - if:
+            condition:
+              lambda: return id(random_sound_index) == 2;
+            then:
+              - media_player.speaker.play_on_device_media_file:
+                  media_file: files_3
+                  announcement: true
+        - if:
+            condition:
+              lambda: return id(random_sound_index) == 3;
+            then:
+              - media_player.speaker.play_on_device_media_file:
+                  media_file: files_4
+                  announcement: true
+        - if:
+            condition:
+              lambda: return id(random_sound_index) == 4;
+            then:
+              - media_player.speaker.play_on_device_media_file:
+                  media_file: files_5
+                  announcement: true
+        - if:
+            condition:
+              lambda: return id(random_sound_index) == 5;
+            then:
+              - media_player.speaker.play_on_device_media_file:
+                  media_file: files_6
+                  announcement: true
+        - if:
+            condition:
+              lambda: return id(random_sound_index) == 6;
+            then:
+              - media_player.speaker.play_on_device_media_file:
+                  media_file: files_7
+                  announcement: true
+        - if:
+            condition:
+              lambda: return id(random_sound_index) == 7;
+            then:
+              - media_player.speaker.play_on_device_media_file:
+                  media_file: files_8
+                  announcement: true
+        - if:
+            condition:
+              lambda: return id(random_sound_index) == 8;
+            then:
+              - media_player.speaker.play_on_device_media_file:
+                  media_file: files_9
+                  announcement: true
+        - if:
+            condition:
+              lambda: return id(random_sound_index) == 9;
+            then:
+              - media_player.speaker.play_on_device_media_file:
+                  media_file: files_10
+                  announcement: true
 
 media_player:
   - platform: speaker
@@ -120,6 +198,28 @@ media_player:
       num_channels: 1
     name: "ESP32 Audio Player"
     buffer_size: 8192
+    files:
+      - id: files_1
+        file: "https://jotid-iot-home.duckdns.org:8123/local/halloween/witch-laugh.mp3"
+      - id: files_2
+        file: "https://jotid-iot-home.duckdns.org:8123/local/halloween/evil-laugh.mp3"
+      - id: files_3
+        file: "https://jotid-iot-home.duckdns.org:8123/local/halloween/evil-witch-laugh.mp3"
+      - id: files_4
+        file: "https://jotid-iot-home.duckdns.org:8123/local/halloween/wolf-howl.mp3"
+      - id: files_5
+        file: "https://jotid-iot-home.duckdns.org:8123/local/halloween/wolf-howling.mp3"
+      - id: files_6
+        file: "https://jotid-iot-home.duckdns.org:8123/local/halloween/ghost-voice.mp3"
+      - id: files_7
+        file: "https://jotid-iot-home.duckdns.org:8123/local/halloween/creepy-bell.mp3"
+      - id: files_8
+        file: "https://jotid-iot-home.duckdns.org:8123/local/halloween/impact.mp3"
+      - id: files_9
+        file: "https://jotid-iot-home.duckdns.org:8123/local/halloween/halloween-music.mp3"
+      - id: files_10
+        file: "https://jotid-iot-home.duckdns.org:8123/local/halloween/funny-pumpkin.mp3"
+
 
 voice_assistant:
   microphone:

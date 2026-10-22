@@ -1,6 +1,6 @@
 # ESPHome Audio Node
 
-ESPHome-Audioplayer auf einem ESP32 mit einem externen PCM5102A-I2S-DAC und Anbindung an Home Assistant. Die aktuelle Konfiguration ist auf Sprachansagen in Mono ausgelegt.
+ESPHome-Audioplayer auf einem ESP32-D0WD-V3 mit externem PCM5102A-I2S-DAC und Anbindung an Home Assistant. Die Konfiguration spielt bei Bewegung zufällig eingebettete Audiodateien ab.
 
 ## Hardware und Verkabelung
 
@@ -17,31 +17,29 @@ Die Pins beziehen sich auf die Konfiguration in [`esphome-audio-node.yaml`](./es
 
 Verbinde den L/R-Pin des ICS-43434 mit GND, damit das Mikrofon den linken I²S-Kanal ausgibt. Versorge beide Module entsprechend deren Angaben. Verbinde den Audioausgang des DAC mit einem geeigneten Verstärker oder Aktivlautsprecher.
 
-Der AM312 wird mit seinem digitalen Ausgang an GPIO 27 angeschlossen. Die Konfiguration erwartet HIGH bei erkannter Bewegung und verwendet keinen internen Pull-up oder Pull-down, damit der Eingang den Sensorausgang nicht unnötig belastet. Sensor und ESP32 müssen eine gemeinsame Masse (GND) haben. Achte darauf, dass am ESP32-Eingang höchstens 3,3 V anliegen; verbinde keinen 5-V-Ausgang direkt mit GPIO 27. In Home Assistant erscheint der Eingang als Binärsensor mit der Geräteklasse „Bewegung“ und kann in Automationen verwendet werden.
+Der AM312 wird mit seinem digitalen Ausgang an GPIO 22 angeschlossen. Die Konfiguration erwartet HIGH bei erkannter Bewegung und verwendet keinen internen Pull-up oder Pull-down, damit der Eingang den Sensorausgang nicht unnötig belastet. Sensor und ESP32 müssen eine gemeinsame Masse (GND) haben. Achte darauf, dass am ESP32-Eingang höchstens 3,3 V anliegen; verbinde keinen 5-V-Ausgang direkt mit GPIO 22. In Home Assistant erscheint der Eingang als Binärsensor mit der Geräteklasse „Bewegung“ und kann in Automationen verwendet werden.
 
 ## Audio-Konfiguration
 
 - I2S-Ausgabe über `speaker.i2s_audio` mit externem DAC
 - Mono, 16 kHz und 16 Bit
-- FLAC für die Home-Assistant-Announcement-Pipeline
+- MP3 für die Home-Assistant-Announcement-Pipeline
+- Zwei MP3-Dateien werden beim Kompilieren von Home Assistant heruntergeladen, in die Firmware eingebettet und bei Bewegung zufällig abgespielt
 - ICS-43434 als I²S-Mikrofon, 16 kHz, linker Kanal
 - Home Assistant Voice Assistant mit Wake-Word-Unterstützung
 - `logger` ist auf `WARN` gesetzt
 - CPU-Takt ist auf 240 MHz gesetzt
-- Mindest-Chiprevision ist 3.1 (ESP32-D0WD-V3)
-- SRAM1 wird als IRAM verwendet (`sram1_as_iram`)
-- Media-Player-Puffer ist auf 100 kB begrenzt, um RAM zu sparen
+- ESP32-D0WD-V3 mit Mindest-Chiprevision 3.1
+- Media-Player-Puffer ist auf 8 kB begrenzt
 
-FLAC ist für diese Konfiguration eine geeignete Wahl: ESPHome benötigt dafür vergleichsweise wenig CPU. OPUS wäre keine passende Alternative bei 16 kHz, da der Codec eine Sample-Rate von 48 kHz voraussetzt.
-
-Falls dein ESP32 bei 240 MHz instabil läuft oder neu startet, ändere `cpu_frequency` in der YAML-Datei auf `160MHz`.
+Falls dein ESP32 bei 240 MHz instabil läuft oder neu startet, ändere `cpu_frequency` in der YAML-Datei auf `160MHz`. Die eingebetteten Audiodateien müssen zusammen in die verfügbare Flash-Partition passen. Bei einem Build-Fehler wegen zu großer App-Datei müssen die Audio-Dateien verkleinert oder weniger Dateien eingebettet werden.
 
 ## Voraussetzungen
 
 - Python 3.12
 - [Poetry](https://python-poetry.org/docs/#installing-with-the-official-installer)
 - ESPHome 2026.9.1 oder neuer (wird durch Poetry installiert)
-- Ein ESP32-Board, das mit `esp32dev` kompatibel ist
+- ESP32-Board mit ESP32-D0WD-V3
 - Home Assistant mit ESPHome-Integration
 
 ## Secrets einrichten
@@ -70,6 +68,7 @@ Das OTA-Passwort bleibt zunächst für das Update vorhandener Firmware erhalten.
 ```powershell
 poetry env use 3.12
 poetry install
+poetry run esphome clean esphome-audio-node.yaml
 poetry run esphome config esphome-audio-node.yaml
 poetry run esphome compile esphome-audio-node.yaml
 ```
