@@ -1,35 +1,37 @@
 # ESPHome Audio Node
 
-ESPHome-Audioplayer auf einem ESP32-D0WD-V3 mit externem PCM5102A-I2S-DAC und Anbindung an Home Assistant. Die Konfiguration spielt bei Bewegung zufällig eingebettete Audiodateien ab.
+ESPHome-Audioplayer auf einem ESP32-S3-WROOM-1-N16R8 im ESP32-S3-DevKitC-1-Format mit externem PCM5102A-I2S-DAC und Anbindung an Home Assistant. Die Konfiguration spielt bei Bewegung zufällig eingebettete Audiodateien ab.
 
 ## Hardware und Verkabelung
 
 Die Pins beziehen sich auf die Konfiguration in [`esphome-audio-node.yaml`](./esphome-audio-node.yaml):
 
-| ESP32 | PCM5102A / ICS-43434 |
+| ESP32-S3-DevKitC-1 | PCM5102A / ICS-43434 |
 | --- | --- |
-| GPIO 25 | PCM5102A LRCK / LCK / WS; ICS-43434 WS |
-| GPIO 26 | PCM5102A BCLK / BCK; ICS-43434 SCK |
-| GPIO 27 | PCM5102A DIN |
-| GPIO 33 | ICS-43434 SD / DOUT |
-| GPIO 22 | Ausgang des Bewegungsmelders |
+| GPIO 4 | PCM5102A LRCK / LCK / WS; ICS-43434 WS |
+| GPIO 5 | PCM5102A BCLK / BCK; ICS-43434 SCK |
+| GPIO 6 | PCM5102A DIN |
+| GPIO 7 | ICS-43434 SD / DOUT |
+| GPIO 21 | Ausgang des Bewegungsmelders (AM312) |
 | GND | GND beider Module |
 
-Verbinde den L/R-Pin des ICS-43434 mit GND, damit das Mikrofon den linken I²S-Kanal ausgibt. Versorge beide Module entsprechend deren Angaben. Verbinde den Audioausgang des DAC mit einem geeigneten Verstärker oder Aktivlautsprecher.
+Das Pinout für ESP32-S3-DevKitC-1 ist unter [`docs/ESP32-S3-DevKitC-1_pinout.png`](./docs/ESP32-S3-DevKitC-1_pinout.png) abgelegt. GPIO 4 bis GPIO 7 sowie GPIO 21 sind auf der abgebildeten Platine herausgeführt. Die GPIOs 19/20 (USB) und 35–37 (vom Octal-PSRAM belegt) werden nicht verwendet.
 
-Der AM312 wird mit seinem digitalen Ausgang an GPIO 22 angeschlossen. Die Konfiguration erwartet HIGH bei erkannter Bewegung und verwendet keinen internen Pull-up oder Pull-down, damit der Eingang den Sensorausgang nicht unnötig belastet. Sensor und ESP32 müssen eine gemeinsame Masse (GND) haben. Achte darauf, dass am ESP32-Eingang höchstens 3,3 V anliegen; verbinde keinen 5-V-Ausgang direkt mit GPIO 22. In Home Assistant erscheint der Eingang als Binärsensor mit der Geräteklasse „Bewegung“ und kann in Automationen verwendet werden.
+Verbinde den L/R-Pin des ICS-43434 mit GND, damit das Mikrofon den linken I²S-Kanal ausgibt. PCM5102A und Mikrofon teilen sich LRCK und BCLK; ihre Datenleitungen sind separat. Versorge beide Module entsprechend deren Angaben. Verbinde den Audioausgang des DAC mit einem geeigneten Verstärker oder Aktivlautsprecher.
+
+Der AM312 wird mit seinem digitalen Ausgang an GPIO 21 angeschlossen. Die Konfiguration erwartet HIGH bei erkannter Bewegung und verwendet keinen internen Pull-up oder Pull-down, damit der Eingang den Sensorausgang nicht unnötig belastet. Sensor und ESP32 müssen eine gemeinsame Masse (GND) haben. Achte darauf, dass am ESP32-Eingang höchstens 3,3 V anliegen; verbinde keinen 5-V-Ausgang direkt mit GPIO 21. In Home Assistant erscheint der Eingang als Binärsensor mit der Geräteklasse „Bewegung“ und kann in Automationen verwendet werden.
 
 ## Audio-Konfiguration
 
 - I2S-Ausgabe über `speaker.i2s_audio` mit externem DAC
 - Mono, 16 kHz und 16 Bit
 - MP3 für die Home-Assistant-Announcement-Pipeline
-- Zwei MP3-Dateien werden beim Kompilieren von Home Assistant heruntergeladen, in die Firmware eingebettet und bei Bewegung zufällig abgespielt
+- Zehn MP3-Dateien werden beim Kompilieren von Home Assistant heruntergeladen, in die Firmware eingebettet und bei Bewegung zufällig abgespielt
 - ICS-43434 als I²S-Mikrofon, 16 kHz, linker Kanal
 - Home Assistant Voice Assistant mit Wake-Word-Unterstützung
 - `logger` ist auf `WARN` gesetzt
 - CPU-Takt ist auf 240 MHz gesetzt
-- ESP32-D0WD-V3 mit Mindest-Chiprevision 3.1
+- ESP32-S3-WROOM-1-N16R8 mit 16 MB Flash und 8 MB Octal-PSRAM
 - Media-Player-Puffer ist auf 8 kB begrenzt
 
 Falls dein ESP32 bei 240 MHz instabil läuft oder neu startet, ändere `cpu_frequency` in der YAML-Datei auf `160MHz`. Die eingebetteten Audiodateien müssen zusammen in die verfügbare Flash-Partition passen. Bei einem Build-Fehler wegen zu großer App-Datei müssen die Audio-Dateien verkleinert oder weniger Dateien eingebettet werden.
@@ -39,7 +41,7 @@ Falls dein ESP32 bei 240 MHz instabil läuft oder neu startet, ändere `cpu_freq
 - Python 3.12
 - [Poetry](https://python-poetry.org/docs/#installing-with-the-official-installer)
 - ESPHome 2026.9.1 oder neuer (wird durch Poetry installiert)
-- ESP32-Board mit ESP32-D0WD-V3
+- ESP32-S3-DevKitC-1 mit ESP32-S3-WROOM-1-N16R8
 - Home Assistant mit ESPHome-Integration
 
 ## Secrets einrichten
@@ -77,6 +79,12 @@ Zum Flashen oder Hochladen der Firmware:
 
 ```powershell
 poetry run esphome run esphome-audio-node.yaml
+```
+
+Beim Umstieg vom bisherigen ESP32 auf den ESP32-S3 muss die erste Installation per USB-Seriell erfolgen, nicht per OTA. Wähle dafür den COM-Port des DevKitC-1, zum Beispiel:
+
+```powershell
+poetry run esphome run esphome-audio-node.yaml --device COM4
 ```
 
 Alternativ kannst du die YAML-Konfiguration in ESPHome Device Builder einbinden und dort bauen sowie flashen. Stelle sicher, dass die referenzierten Secrets auch dort eingerichtet sind.

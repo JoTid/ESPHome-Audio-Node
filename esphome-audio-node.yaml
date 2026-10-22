@@ -10,14 +10,16 @@ logger:
   baud_rate: 0
 
 esp32:
-  board: esp32dev
+  board: esp32-s3-devkitc-1
   cpu_frequency: 240MHz
+  flash_size: 16MB
   framework:
     type: esp-idf
-    advanced:
-      minimum_chip_revision: "3.1"
-      sram1_as_iram: true
-  variant: ESP32
+  variant: ESP32S3
+
+psram:
+  mode: octal
+  speed: 80MHz
 
 # Enable Home Assistant API
 api:
@@ -82,8 +84,8 @@ globals:
 # I2S Audio Bus Definition (nur die Clocks)
 i2s_audio:
   - id: i2s_out
-    i2s_lrclk_pin: GPIO25   # LRCK / WS
-    i2s_bclk_pin: GPIO26   # BCK / Bit Clock
+    i2s_lrclk_pin: GPIO4    # LRCK / WS
+    i2s_bclk_pin: GPIO5     # BCK / Bit Clock
 
 # Speaker / Media Player Komponente (hier gehört der Daten-Pin hin)
 speaker:
@@ -91,7 +93,7 @@ speaker:
     id: my_speaker_component
     dac_type: external
     i2s_audio_id: i2s_out
-    i2s_dout_pin: GPIO27    # DIN / Data In des PCM5102A
+    i2s_dout_pin: GPIO6     # DIN / Data In des PCM5102A
     i2s_mode: primary
     channel: mono
     sample_rate: 16000
@@ -101,7 +103,7 @@ microphone:
   - platform: i2s_audio
     id: ics43434_mic
     i2s_audio_id: i2s_out
-    i2s_din_pin: GPIO33    # SD / DOUT des ICS-43434
+    i2s_din_pin: GPIO7      # SD / DOUT des ICS-43434
     adc_type: external
     channel: left
     sample_rate: 16000
@@ -112,7 +114,7 @@ binary_sensor:
     name: "Bewegungsmelder"
     device_class: motion
     pin:
-      number: GPIO22
+      number: GPIO21
       mode: INPUT
     on_press:
       then:
@@ -193,7 +195,7 @@ media_player:
     id: my_speaker
     announcement_pipeline:
       speaker: my_speaker_component
-      format: WAV
+      format: MP3
       sample_rate: 16000
       num_channels: 1
     name: "ESP32 Audio Player"
