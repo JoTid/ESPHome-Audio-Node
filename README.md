@@ -12,14 +12,17 @@ Die Pins beziehen sich auf die Konfiguration in [`esphome-audio-node.yaml`](./es
 | GPIO 5 | PCM5102A BCLK / BCK; ICS-43434 SCK |
 | GPIO 6 | PCM5102A DIN |
 | GPIO 7 | ICS-43434 SD / DOUT |
+| GPIO 8 | WS2812B-Datenleitung (zwei LEDs) |
 | GPIO 21 | Ausgang des Bewegungsmelders (AM312) |
 | GND | GND beider Module |
 
-Das Pinout für ESP32-S3-DevKitC-1 ist unter [`docs/ESP32-S3-DevKitC-1_pinout.png`](./docs/ESP32-S3-DevKitC-1_pinout.png) abgelegt. GPIO 4 bis GPIO 7 sowie GPIO 21 sind auf der abgebildeten Platine herausgeführt. Die GPIOs 19/20 (USB) und 35–37 (vom Octal-PSRAM belegt) werden nicht verwendet.
+Das Pinout für ESP32-S3-DevKitC-1 ist unter [`docs/ESP32-S3-DevKitC-1_pinout.png`](./docs/ESP32-S3-DevKitC-1_pinout.png) abgelegt. GPIO 4 bis GPIO 8 sowie GPIO 21 sind auf der abgebildeten Platine herausgeführt. Die GPIOs 19/20 (USB) und 35–37 (vom Octal-PSRAM belegt) werden nicht verwendet.
 
 Verbinde den L/R-Pin des ICS-43434 mit GND, damit das Mikrofon den linken I²S-Kanal ausgibt. PCM5102A und Mikrofon teilen sich LRCK und BCLK; ihre Datenleitungen sind separat. Versorge beide Module entsprechend deren Angaben. Verbinde den Audioausgang des DAC mit einem geeigneten Verstärker oder Aktivlautsprecher.
 
 Der AM312 wird mit seinem digitalen Ausgang an GPIO 21 angeschlossen. Die Konfiguration erwartet HIGH bei erkannter Bewegung und verwendet keinen internen Pull-up oder Pull-down, damit der Eingang den Sensorausgang nicht unnötig belastet. Sensor und ESP32 müssen eine gemeinsame Masse (GND) haben. Achte darauf, dass am ESP32-Eingang höchstens 3,3 V anliegen; verbinde keinen 5-V-Ausgang direkt mit GPIO 21. In Home Assistant erscheint der Eingang als Binärsensor mit der Geräteklasse „Bewegung“ und kann in Automationen verwendet werden.
+
+Die beiden WS2812B-LEDs werden in Reihe angeschlossen: GPIO 8 über einen Datenwiderstand (z. B. 330 Ω) an DIN der ersten LED, deren DOUT an DIN der zweiten LED. Versorge den LED-Streifen mit geeigneten 5 V und verbinde dessen GND mit GND des ESP32. Speise die LEDs nicht aus einem ESP32-GPIO. Für eine zuverlässige Datenübertragung von 3,3 V auf 5 V ist ein Logikpegelwandler empfehlenswert. Während der Wiedergabe beziehungsweise einer Audio-Ansage blinken beide LEDs rot (500 ms an/500 ms aus); bei Pause oder Ende der Wiedergabe gehen sie aus.
 
 ## Audio-Konfiguration
 
@@ -27,6 +30,7 @@ Der AM312 wird mit seinem digitalen Ausgang an GPIO 21 angeschlossen. Die Konfig
 - Mono, 16 kHz und 16 Bit
 - MP3 für die Home-Assistant-Announcement-Pipeline
 - Zehn MP3-Dateien werden beim Kompilieren von Home Assistant heruntergeladen, in die Firmware eingebettet und bei Bewegung zufällig abgespielt
+- Zwei WS2812B-LEDs an GPIO 8 blinken während der Audio-Wiedergabe rot
 - ICS-43434 als I²S-Mikrofon, 16 kHz, linker Kanal
 - Home Assistant Voice Assistant mit Wake-Word-Unterstützung
 - `logger` ist auf `WARN` gesetzt

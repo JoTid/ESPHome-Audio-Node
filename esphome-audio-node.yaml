@@ -109,6 +109,26 @@ microphone:
     sample_rate: 16000
     bits_per_sample: 32bit
 
+light:
+  - platform: esp32_rmt_led_strip
+    id: movement_leds
+    name: "Bewegungs-LEDs"
+    pin: GPIO8
+    num_leds: 6
+    chipset: WS2812
+    channel_colors: GRB
+    effects:
+      - strobe:
+          name: "Rot blinken"
+          colors:
+            - state: true
+              red: 100%
+              green: 0%
+              blue: 0%
+              duration: 100ms
+            - state: false
+              duration: 50ms
+
 binary_sensor:
   - platform: gpio
     name: "Bewegungsmelder"
@@ -200,6 +220,18 @@ media_player:
       num_channels: 1
     name: "ESP32 Audio Player"
     buffer_size: 8192
+    on_play:
+      - light.turn_on:
+          id: movement_leds
+          effect: "Rot blinken"
+    on_announcement:
+      - light.turn_on:
+          id: movement_leds
+          effect: "Rot blinken"
+    on_pause:
+      - light.turn_off: movement_leds
+    on_idle:
+      - light.turn_off: movement_leds
     files:
       - id: files_1
         file: "https://jotid-iot-home.duckdns.org:8123/local/halloween/witch-laugh.mp3"
