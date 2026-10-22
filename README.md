@@ -1,38 +1,52 @@
 # ESPHome Audio Node
 
-ESPHome-Audioplayer auf einem ESP32 mit einem externen PCM5102A-I2S-DAC und Anbindung an Home Assistant. Die aktuelle Konfiguration ist auf Sprachansagen in Mono ausgelegt.
+ESPHome-Audioplayer auf einem ESP32-S3 CAM Development Board mit N16R8-Modul, externem PCM5102A-I2S-DAC und Anbindung an Home Assistant. Die aktuelle Konfiguration ist auf Sprachansagen in Mono ausgelegt.
 
 ## Hardware und Verkabelung
 
 Die Pins beziehen sich auf die Konfiguration in [`esphome-audio-node.yaml`](./esphome-audio-node.yaml):
 
-| ESP32 | PCM5102A / ICS-43434 |
+Das verwendete Board-Pinout ist in [docs/esp32-s3_cam_pinout.png](./docs/esp32-s3_cam_pinout.png) abgebildet.
+
+| ESP32-S3 CAM Development Board | PCM5102A / ICS-43434 |
 | --- | --- |
-| GPIO 25 | PCM5102A LRCK / LCK / WS; ICS-43434 WS |
-| GPIO 26 | PCM5102A BCLK / BCK; ICS-43434 SCK |
-| GPIO 22 | PCM5102A DIN |
-| GPIO 33 | ICS-43434 SD / DOUT |
-| GPIO 27 | Ausgang des Bewegungsmelders |
-| GND | GND beider Module |
+| GPIO 1 | PCM5102A LRCK / LCK / WS; ICS-43434 WS |
+| GPIO 2 | PCM5102A BCLK / BCK; ICS-43434 SCK |
+| GPIO 14 | PCM5102A DIN |
+| GPIO 21 | ICS-43434 SD / DOUT |
+| GPIO 43 | Ausgang des Bewegungsmelders |
+| GND | GND der Module und des Bewegungsmelders |
+
+Die Kameraanschlüsse belegen unter anderem GPIOs 4–13 und 15–18; diese werden daher nicht für Audio verwendet.
+
+Das Board hat einen Onboard-microSD-Anschluss. Laut Pinout sind dessen Signale:
+
+| ESP32-S3 GPIO | Onboard-microSD |
+| --- | --- |
+| GPIO 39 | SD_CLK |
+| GPIO 38 | SD_CMD |
+| GPIO 40 | SD_DATA |
+
+Die SD-Karte ist derzeit nicht in der ESPHome-Konfiguration eingebunden. Diese Zuordnung dokumentiert die Anschlüsse für eine mögliche spätere Implementierung der lokalen Audiowiedergabe.
 
 Verbinde den L/R-Pin des ICS-43434 mit GND, damit das Mikrofon den linken I²S-Kanal ausgibt. Versorge beide Module entsprechend deren Angaben. Verbinde den Audioausgang des DAC mit einem geeigneten Verstärker oder Aktivlautsprecher.
 
-Der AM312 wird mit seinem digitalen Ausgang an GPIO 27 angeschlossen. Die Konfiguration erwartet HIGH bei erkannter Bewegung und verwendet keinen internen Pull-up oder Pull-down, damit der Eingang den Sensorausgang nicht unnötig belastet. Sensor und ESP32 müssen eine gemeinsame Masse (GND) haben. Achte darauf, dass am ESP32-Eingang höchstens 3,3 V anliegen; verbinde keinen 5-V-Ausgang direkt mit GPIO 27. In Home Assistant erscheint der Eingang als Binärsensor mit der Geräteklasse „Bewegung“ und kann in Automationen verwendet werden.
+Der AM312 wird mit seinem digitalen Ausgang an GPIO 43 angeschlossen. Die Konfiguration erwartet HIGH bei erkannter Bewegung und verwendet keinen internen Pull-up oder Pull-down, damit der Eingang den Sensorausgang nicht unnötig belastet. Sensor und ESP32 müssen eine gemeinsame Masse (GND) haben. Achte darauf, dass am ESP32-Eingang höchstens 3,3 V anliegen; verbinde keinen 5-V-Ausgang direkt mit GPIO 43. In Home Assistant erscheint der Eingang als Binärsensor mit der Geräteklasse „Bewegung“ und kann in Automationen verwendet werden.
+
+Die serielle UART-Ausgabe des ESPHome-Loggers ist deaktiviert (`baud_rate: 0`), weil GPIO 43 als Eingang für den Bewegungsmelder verwendet wird. Die Warnmeldungen bleiben über die ESPHome-/Home-Assistant-Verbindung verfügbar.
 
 ## Audio-Konfiguration
 
 - I2S-Ausgabe über `speaker.i2s_audio` mit externem DAC
 - Mono, 16 kHz und 16 Bit
-- FLAC für die Home-Assistant-Announcement-Pipeline
+- WAV für die Home-Assistant-Announcement-Pipeline
 - ICS-43434 als I²S-Mikrofon, 16 kHz, linker Kanal
 - Home Assistant Voice Assistant mit Wake-Word-Unterstützung
 - `logger` ist auf `WARN` gesetzt
+- UART-Logging ist deaktiviert, da GPIO 43 als Sensoreingang verwendet wird
 - CPU-Takt ist auf 240 MHz gesetzt
-- Mindest-Chiprevision ist 3.1 (ESP32-D0WD-V3)
-- SRAM1 wird als IRAM verwendet (`sram1_as_iram`)
+- ESP32-S3-N16R8 mit 16 MB Flash und Octal-PSRAM
 - Media-Player-Puffer ist auf 100 kB begrenzt, um RAM zu sparen
-
-FLAC ist für diese Konfiguration eine geeignete Wahl: ESPHome benötigt dafür vergleichsweise wenig CPU. OPUS wäre keine passende Alternative bei 16 kHz, da der Codec eine Sample-Rate von 48 kHz voraussetzt.
 
 Falls dein ESP32 bei 240 MHz instabil läuft oder neu startet, ändere `cpu_frequency` in der YAML-Datei auf `160MHz`.
 
@@ -41,7 +55,7 @@ Falls dein ESP32 bei 240 MHz instabil läuft oder neu startet, ändere `cpu_freq
 - Python 3.12
 - [Poetry](https://python-poetry.org/docs/#installing-with-the-official-installer)
 - ESPHome 2026.9.1 oder neuer (wird durch Poetry installiert)
-- Ein ESP32-Board, das mit `esp32dev` kompatibel ist
+- ESP32-S3 CAM Development Board mit N16R8-Modul und Onboard-microSD-Anschluss
 - Home Assistant mit ESPHome-Integration
 
 ## Secrets einrichten
