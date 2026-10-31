@@ -15,10 +15,12 @@ Die Pins beziehen sich auf die Konfiguration in [`esphome-audio-node.yaml`](./es
 | GPIO 8 | WS2812B-Datenleitung LED-Streifen 1 (bis zu 50 LEDs) |
 | GPIO 9 | WS2812B-Datenleitung LED-Streifen 2 (bis zu 50 LEDs) |
 | GPIO 10 | WS2812B-Datenleitung LED-Streifen 3 (bis zu 50 LEDs) |
+| GPIO 11 | PWM-Signal MG90S-Servo 1 |
+| GPIO 12 | PWM-Signal MG90S-Servo 2 |
 | GPIO 21 | Ausgang des Bewegungsmelders (AM312) |
-| GND | Gemeinsame Masse von ESP32, LED-Streifen, DAC und Mikrofon |
+| GND | Gemeinsame Masse von ESP32, LED-Streifen, Servos, DAC und Mikrofon |
 
-Das Pinout für ESP32-S3-DevKitC-1 ist unter [`docs/ESP32-S3-DevKitC-1_pinout.png`](./docs/ESP32-S3-DevKitC-1_pinout.png) abgelegt. GPIO 4 bis GPIO 10 sowie GPIO 21 sind auf der abgebildeten Platine herausgeführt. Die GPIOs 19/20 (USB) und 35–37 (vom Octal-PSRAM belegt) werden nicht verwendet.
+Das Pinout für ESP32-S3-DevKitC-1 ist unter [`docs/ESP32-S3-DevKitC-1_pinout.png`](./docs/ESP32-S3-DevKitC-1_pinout.png) abgelegt. GPIO 4 bis GPIO 12 sowie GPIO 21 sind auf der abgebildeten Platine herausgeführt. Die GPIOs 19/20 (USB) und 35–37 (vom Octal-PSRAM belegt) werden nicht verwendet.
 
 Verbinde den L/R-Pin des ICS-43434 mit GND, damit das Mikrofon den linken I²S-Kanal ausgibt. PCM5102A und Mikrofon teilen sich LRCK und BCLK; ihre Datenleitungen sind separat. Versorge beide Module entsprechend deren Angaben. Verbinde den Audioausgang des DAC mit einem geeigneten Verstärker oder Aktivlautsprecher.
 
@@ -26,9 +28,13 @@ Der AM312 wird mit seinem digitalen Ausgang an GPIO 21 angeschlossen. Die Konfig
 
 Es können bis zu drei unabhängige WS2812B-Streifen mit jeweils bis zu 50 LEDs angeschlossen werden. Verbinde für Streifen 1 GPIO 8, Streifen 2 GPIO 9 und Streifen 3 GPIO 10 jeweils über einen eigenen Datenwiderstand (z. B. 330 Ω) mit DIN des jeweiligen Streifens. Die LEDs eines Streifens werden in Reihe verbunden (DOUT zu DIN). Versorge die Streifen mit einer für die Gesamtzahl der LEDs ausreichend dimensionierten 5-V-Stromversorgung und verbinde deren GND mit GND des ESP32. Speise die LEDs nicht aus einem ESP32-GPIO. Bei langen Streifen kann zusätzliche Stromeinspeisung erforderlich sein. Für eine zuverlässige Datenübertragung von 3,3 V auf 5 V ist je Datenleitung ein geeigneter Logikpegelwandler empfehlenswert. Alle aktivierten Streifen blinken während der Musik beziehungsweise Audio-Ansage mit ihren jeweiligen HA-Einstellungen; bei Pause oder Ende der Wiedergabe gehen sie aus.
 
+Zwei MG90S-Servos können über die PWM-Signale GPIO 11 und GPIO 12 betrieben werden. Schließe die Servos an eine separate, ausreichend dimensionierte 5-V-Versorgung an, nicht an den 3,3-V-Ausgang des ESP32. Verbinde die Masse der Servo-Versorgung mit ESP32-GND. Die Firmware verwendet 50 Hz. In Home Assistant schaltet „Halloween-Servo 1“ beziehungsweise „Halloween-Servo 2“ die Bewegung unabhängig frei. Während einer lokalen Audiodatei fährt der jeweilige Servo alle 500 ms zwischen seinen zwei Endpunkten hin und her; bei Ende der lokalen Wiedergabe wird das PWM-Signal getrennt. Voice-Assistant-Audio löst die Servos nicht aus.
+
 In Home Assistant stehen die Schalter „Halloween-Musik“, „Halloween-LED“, „Halloween-LED 2“ und „Halloween-LED 3“ zur Verfügung. „Halloween-Musik“ aktiviert die zufällige Sound-Wiedergabe bei Bewegung; beim Ausschalten wird eine laufende Wiedergabe gestoppt. Die drei LED-Schalter aktivieren oder deaktivieren jeden LED-Streifen unabhängig voneinander.
 
 Für jeden LED-Streifen können Farbe, Blink-AN-Zeit, Blink-AUS-Zeit und die Anzahl der blinkenden LEDs getrennt eingestellt werden. Die Farbe kann aus Rot, Orange, Gelb, Grün, Türkis, Blau, Violett und Weiß ausgewählt werden. Die beiden Zeiten sind in Millisekunden einstellbar (jeweils 20 bis 5000 ms, in 10-ms-Schritten); voreingestellt sind 50 ms AN und 20 ms AUS. Die LED-Anzahl ist über ein Eingabefeld von 1 bis 50 einstellbar. Jeder Streifen muss mindestens so viele angeschlossene Pixel haben wie ausgewählt sind.
+
+Für jeden Servo gibt es HA-Eingabefelder für die linke und rechte Endposition (Prozentwerte, voreingestellt auf -50 % und +50 %). Kalibriere die Positionen vorsichtig, indem du sie schrittweise veränderst und die mechanischen Anschläge vermeidest. Servos unterscheiden sich in ihrem nutzbaren Winkel; 180° und eine Fahrzeit von 500 ms sind nicht für jedes Exemplar garantiert.
 
 ## Audio-Konfiguration
 
@@ -38,6 +44,7 @@ Für jeden LED-Streifen können Farbe, Blink-AN-Zeit, Blink-AUS-Zeit und die Anz
 - Zehn MP3-Dateien werden beim Kompilieren von Home Assistant heruntergeladen, in die Firmware eingebettet und bei Bewegung zufällig abgespielt
 - Drei unabhängige WS2812B-Streifen (je bis zu 50 LEDs an GPIO 8, 9 und 10) blinken während der Audio-Wiedergabe
 - Home-Assistant-Schalter sowie separate Farbe, Blinkdauer und LED-Anzahl für jeden Streifen
+- Zwei MG90S-Servos an GPIO 11 und 12 bewegen sich bei aktivierten Schaltern während lokaler Audio-Wiedergabe
 - ICS-43434 als I²S-Mikrofon, 16 kHz, linker Kanal
 - Home Assistant Voice Assistant mit Wake-Word-Unterstützung
 - `logger` ist auf `WARN` gesetzt
