@@ -88,6 +88,14 @@ globals:
     type: bool
     restore_value: no
     initial_value: 'false'
+  - id: sound_cooldown_started
+    type: bool
+    restore_value: no
+    initial_value: 'false'
+  - id: sound_cooldown_last_start_ms
+    type: uint32_t
+    restore_value: no
+    initial_value: '0'
   - id: servo_1_left_level
     type: float
     restore_value: no
@@ -454,6 +462,15 @@ select:
 
 number:
   - platform: template
+    id: sound_cooldown_seconds
+    name: "Ruhezeit zwischen Sounds"
+    unit_of_measurement: "s"
+    min_value: 0
+    max_value: 60
+    step: 1
+    optimistic: true
+    initial_value: 0
+  - platform: template
     id: halloween_led_on_time
     name: "Halloween-LED Blink-AN-Zeit"
     unit_of_measurement: "ms"
@@ -748,8 +765,18 @@ binary_sensor:
       then:
         - if:
             condition:
-              switch.is_on: halloween_music_enabled
+              lambda: |-
+                const uint32_t cooldown_ms = static_cast<uint32_t>(
+                  id(sound_cooldown_seconds).state * 1000.0f
+                );
+                return id(halloween_music_enabled).state
+                  && (cooldown_ms == 0
+                    || !id(sound_cooldown_started)
+                    || millis() - id(sound_cooldown_last_start_ms) >= cooldown_ms);
             then:
+              - lambda: |-
+                  id(sound_cooldown_started) = true;
+                  id(sound_cooldown_last_start_ms) = millis();
               - lambda: id(local_audio_active) = true;
               - lambda: id(random_sound_index) = random_uint32() % 12;
               - if:
